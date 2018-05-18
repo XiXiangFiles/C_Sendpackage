@@ -179,19 +179,28 @@ class package{
 
 int main(void){
 	char *dest_mac,*sour_mac;
+	char *interface="wlan0";
 	package *pak=new package();
+
 //-------------------------------allocate memory for mac address String  
 	dest_mac=pak->allocate(6);
 	sour_mac=pak->allocate(6);
-	strcpy(sour_mac,pak->getmac());
+//	pak->getmac(&interface);
+	memcpy(sour_mac,pak->getmac(&interface),6);
 	
+	dest_mac[0]=0xff;	
+	dest_mac[1]=0xff;	
+	dest_mac[2]=0xff;
+	dest_mac[3]=0xff;
+	dest_mac[4]=0xff;	
+	dest_mac[5]=0xff;
 
 	ArrayList *listip6=new ArrayList(); 
 	listip6=pak->ipv6_ip();
 	for(int i=0 ; i< listip6->length(); i++){
-		printf("%s\n",listip6->pop());
+		printf("ip6[%d]=%s\n",i,listip6->pop());
 	}
-
+//	printf("mac=%x\n",sour_mac[1]);
 
 	return 0;
 }
