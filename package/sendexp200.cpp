@@ -86,6 +86,13 @@ public:
 };
 
 int main(void){
+	package *pak=new package();
+	ArrayList listip6= pak->ipv6_ip();
+	for(int i=0 ; i< listip6->length(); i++){
+		printf("%s\n",listip6->pop());
+	}
+
+
 	return 0;
 }
 // void send_package(char *s_mac, char *d_mac, char *des_ip , char *sou_ip , char *data);
