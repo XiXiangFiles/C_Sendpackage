@@ -87,7 +87,8 @@ public:
 
 int main(void){
 	package *pak=new package();
-	ArrayList listip6= pak->ipv6_ip();
+	ArrayList *listip6=new ArrayList(); 
+	listip6=pak->ipv6_ip();
 	for(int i=0 ; i< listip6->length(); i++){
 		printf("%s\n",listip6->pop());
 	}
