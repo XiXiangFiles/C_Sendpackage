@@ -27,6 +27,10 @@
 #define ETH_HDRLEN 14
 #define IP6_HDRLEN 40
 #define ICMP_HDRLEN 8
+
+typedef struct ip6_hdr Ip6Hdr;
+typedef struct icmp6_hdr Icmp6Hdr;
+
 class package{
 	public:
 		void printfhex(char *str,int num){
@@ -178,13 +182,26 @@ class package{
 			ptr += 1;
 			chksumlen += 1;
 		}
+	}
+	Ip6Hdr creat_IPv6Header(char *dest_mac, char *sour_mac){
+		Ip6Hdr send_iphdr;
+		send_iphdr.ip6_flow = htonl ((6 << 28) | (0 << 20) | 0);
+		send_iphdr.ip6_plen = htons (ICMP_HDRLEN + datalen);
+		send_iphdr.ip6_nxt = IPPROTO_ICMPV6;
+		send_iphdr.ip6_hops = 255;
+		if ((status = inet_pton (AF_INET6, src_ip, &(send_iphdr.ip6_src))) != 1) {
+    		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
+    		exit (EXIT_FAILURE);
+  		}
+	}
+	icmp6_hdr creat_Icmphdr(){
 
-}
+	}
+	uint8_t *creat_send_ether_frame(char *dest_mac, char *sour_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
 
 
-
+	}
 };
-
 int main(void){
 	char *dest_mac,*sour_mac;
 	char *interface="wlan0";
