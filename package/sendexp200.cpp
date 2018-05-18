@@ -28,58 +28,150 @@
 #define IP6_HDRLEN 40
 #define ICMP_HDRLEN 8
 class package{
-public:
-	char *allocate(int len){
-		void *ptr;
-		if(len>0){
-			ptr=malloc(len *sizeof(char));
-		}else{
-			perror("allocate errot : len < 0");
-		}
-		return (char *)ptr;
-	}
-	char *getmac(char **interface){
-		
-		int status;
-		struct ifreq ifr;
-		char *mac;
-		mac=allocate(sizeof(ifr.ifr_name));
-		memset(&ifr,0,sizeof(ifr));
-		snprintf(ifr.ifr_name,sizeof(ifr.ifr_name),"%s", *interface);
-		if((status=socket(PF_PACKET,SOCK_RAW,htons(ETH_P_ALL)))<0){
-			perror("Fail to get mac at creat socket.");
-			exit(0);
-		}
-		printf("interface= %s \n",*interface);
-		if((ioctl(status,SIOCGIFHWADDR,&ifr))<0){
-			perror("failed to get mac addr");
-			exit(0);
-		}
-
-		memcpy(mac,ifr.ifr_hwaddr.sa_data,sizeof(ifr.ifr_hwaddr.sa_data));	
-		return mac;
-	}
-	ArrayList *ipv6_ip(){
-		ArrayList *arr=new ArrayList();
-
-		struct ifaddrs *ifaddr;
-		getifaddrs(&ifaddr);
-		while(ifaddr!=NULL){
-			if(ifaddr->ifa_addr->sa_family!=AF_INET6){
-			}else{	
-				void *ptr;
-				ptr=&((struct sockaddr_in6 *)ifaddr->ifa_addr)->sin6_addr;	
-				//char ip6[INET6_ADDRSTRLEN];
-				char *ip6;
-				ip6=allocate(INET6_ADDRSTRLEN);
-				inet_ntop(AF_INET6, ptr ,ip6,INET6_ADDRSTRLEN);//get ip
-				arr->put(ip6,INET6_ADDRSTRLEN);
-				
+	public:
+		char *allocate(int len){
+			void *ptr;
+			if(len>0){
+				ptr=malloc(len *sizeof(char));
+			}else{
+				perror("allocate errot : len < 0");
 			}
-			ifaddr=ifaddr->ifa_next;
-		}	
-		return arr;
-	}
+			return (char *)ptr;
+		}
+		char *getmac(char **interface){
+			
+			int status;
+			struct ifreq ifr;
+			char *mac;
+			mac=allocate(sizeof(ifr.ifr_name));
+			memset(&ifr,0,sizeof(ifr));
+			snprintf(ifr.ifr_name,sizeof(ifr.ifr_name),"%s", *interface);
+			if((status=socket(PF_PACKET,SOCK_RAW,htons(ETH_P_ALL)))<0){
+				perror("Fail to get mac at creat socket.");
+				exit(0);
+			}
+			printf("interface= %s \n",*interface);
+			if((ioctl(status,SIOCGIFHWADDR,&ifr))<0){
+				perror("failed to get mac addr");
+				exit(0);
+			}
+
+			memcpy(mac,ifr.ifr_hwaddr.sa_data,sizeof(ifr.ifr_hwaddr.sa_data));	
+			return mac;
+		}
+
+		ArrayList *ipv6_ip(){
+			ArrayList *arr=new ArrayList();
+
+			struct ifaddrs *ifaddr;
+			getifaddrs(&ifaddr);
+			while(ifaddr!=NULL){
+				if(ifaddr->ifa_addr->sa_family!=AF_INET6){
+				}else{	
+					void *ptr;
+					ptr=&((struct sockaddr_in6 *)ifaddr->ifa_addr)->sin6_addr;	
+					//char ip6[INET6_ADDRSTRLEN];
+					char *ip6;
+					ip6=allocate(INET6_ADDRSTRLEN);
+					inet_ntop(AF_INET6, ptr ,ip6,INET6_ADDRSTRLEN);//get ip
+					arr->put(ip6,INET6_ADDRSTRLEN);
+					
+				}
+				ifaddr=ifaddr->ifa_next;
+			}	
+			return arr;
+		}
+		uint16_t checksum (uint16_t *addr, int len){
+			int nleft = len;
+	  		int sum = 0;
+	  		uint16_t *w = addr;
+	  		uint16_t answer = 0;
+
+   			while (nleft > 1) {
+		    	sum += *w++;
+		    	nleft -= sizeof (uint16_t);
+		  	}
+
+			if (nleft == 1) {
+				*(uint8_t *) (&answer) = *(uint8_t *) w;
+				sum += answer;
+			}
+
+			sum = (sum >> 16) + (sum & 0xFFFF);
+			sum += (sum >> 16);
+			answer = ~sum;
+			return (answer);
+		}
+		uint16_t icmp6_checksum (struct ip6_hdr iphdr, struct icmp6_hdr icmp6hdr, uint8_t *payload, int payloadlen){
+  			char buf[IP_MAXPACKET];
+  			char *ptr;
+			int chksumlen = 0;
+			int i;
+
+  			ptr = &buf[0];  // ptr points to beginning of buffer buf
+
+  // Copy source IP address into buf (128 bits)
+  			memcpy (ptr, &iphdr.ip6_src.s6_addr, sizeof (iphdr.ip6_src.s6_addr));
+  			ptr += sizeof (iphdr.ip6_src);
+  			chksumlen += sizeof (iphdr.ip6_src);
+
+  // Copy destination IP address into buf (128 bits)
+  			memcpy (ptr, &iphdr.ip6_dst.s6_addr, sizeof (iphdr.ip6_dst.s6_addr));
+  			ptr += sizeof (iphdr.ip6_dst.s6_addr);
+  			chksumlen += sizeof (iphdr.ip6_dst.s6_addr);
+
+  // Copy Upper Layer Packet length into buf (32 bits).
+  // Should not be greater than 65535 (i.e., 2 bytes).
+			*ptr = 0; ptr++;
+			*ptr = 0; ptr++;
+			*ptr = (ICMP_HDRLEN + payloadlen) / 256;
+			ptr++;
+			*ptr = (ICMP_HDRLEN + payloadlen) % 256;
+			ptr++;
+			chksumlen += 4;
+
+			  // Copy zero field to buf (24 bits)
+			*ptr = 0; ptr++;
+			*ptr = 0; ptr++;
+			*ptr = 0; ptr++;
+			chksumlen += 3;
+			// Copy next header field to buf (8 bits)
+			memcpy (ptr, &iphdr.ip6_nxt, sizeof (iphdr.ip6_nxt));
+			ptr += sizeof (iphdr.ip6_nxt);
+			chksumlen += sizeof (iphdr.ip6_nxt);
+			// Copy ICMPv6 type to buf (8 bits)
+			memcpy (ptr, &icmp6hdr.icmp6_type, sizeof (icmp6hdr.icmp6_type));
+			ptr += sizeof (icmp6hdr.icmp6_type);
+			chksumlen += sizeof (icmp6hdr.icmp6_type);
+			// Copy ICMPv6 code to buf (8 bits)
+			memcpy (ptr, &icmp6hdr.icmp6_code, sizeof (icmp6hdr.icmp6_code));
+			ptr += sizeof (icmp6hdr.icmp6_code);
+			chksumlen += sizeof (icmp6hdr.icmp6_code);
+			// Copy ICMPv6 ID to buf (16 bits)
+			memcpy (ptr, &icmp6hdr.icmp6_id, sizeof (icmp6hdr.icmp6_id));
+			ptr += sizeof (icmp6hdr.icmp6_id);
+			chksumlen += sizeof (icmp6hdr.icmp6_id);
+			// Copy ICMPv6 sequence number to buff (16 bits)
+			memcpy (ptr, &icmp6hdr.icmp6_seq, sizeof (icmp6hdr.icmp6_seq));
+			ptr += sizeof (icmp6hdr.icmp6_seq);
+			chksumlen += sizeof (icmp6hdr.icmp6_seq);
+			 // Copy ICMPv6 checksum to buf (16 bits)
+			  // Zero, since we don't know it yet.
+			*ptr = 0; ptr++;
+			*ptr = 0; ptr++;
+			chksumlen += 2;
+			// Copy ICMPv6 payload to buf
+			memcpy (ptr, payload, payloadlen * sizeof (uint8_t));
+			ptr += payloadlen;
+			chksumlen += payloadlen;
+			 // Pad to the next 16-bit boundary
+			for (i=0; i<payloadlen%2; i++, ptr++) {
+			*ptr = 0;
+			ptr += 1;
+			chksumlen += 1;
+		}
+
+}
 
 
 
@@ -98,7 +190,7 @@ int main(void){
 }
 // void send_package(char *s_mac, char *d_mac, char *des_ip , char *sou_ip , char *data);
 // uint16_t checksum (uint16_t *, int);
-// uint16_t icmp6_checksum (struct ip6_hdr, struct icmp6_hdr, uint8_t *, int);
+// uint16_t icmp6_checksum (struct ip6_hdr, struct icmp6_hdr, uint8_t *, int payloadlen);
 // int main(int argc, char const *argv[])
 // {
 // 	/* code */
