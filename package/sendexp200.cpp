@@ -29,6 +29,14 @@
 #define ICMP_HDRLEN 8
 class package{
 	public:
+		void printfhex(char *str,int num){
+			for(int i=0; i<num ;i++){
+				if(str[i]!=NULL){
+					printf("%x",str[i]);
+				}
+			}
+			printf("\n");
+		}
 		char *allocate(int len){
 			void *ptr;
 			if(len>0){
@@ -200,7 +208,7 @@ int main(void){
 	for(int i=0 ; i< listip6->length(); i++){
 		printf("ip6[%d]=%s\n",i,listip6->pop());
 	}
-//	printf("mac=%x\n",sour_mac[1]);
+	pak->printfhex(sour_mac,6);
 
 	return 0;
 }
