@@ -183,7 +183,7 @@ class package{
 			chksumlen += 1;
 		}
 	}
-	Ip6Hdr creat_IPv6Header(char *dest_mac, char *sour_mac){
+	Ip6Hdr creat_IPv6Header(char *dest_mac, char *sour_mac , char *src_ip, char *dest_ip){
 		Ip6Hdr send_iphdr;
 		send_iphdr.ip6_flow = htonl ((6 << 28) | (0 << 20) | 0);
 		send_iphdr.ip6_plen = htons (ICMP_HDRLEN + datalen);
@@ -193,9 +193,20 @@ class package{
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
   		}
-	}
-	icmp6_hdr creat_Icmphdr(){
 
+  		if ((status = inet_pton (AF_INET6, src_ip, &(send_iphdr.ip6_dst))) != 1) {
+    		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
+    		exit (EXIT_FAILURE);
+  		}
+	}
+	icmp6_hdr creat_Icmphdr(int icmp6_type, int icmp6_code , Ip6Hdr send_iphdr , Icmp6Hdr send_icmphdr ,char *data){
+		send_icmphdr.icmp6_type =icmp6_type;
+		send_icmphdr.icmp6_code = icmp6_code;
+		send_icmphdr.icmp6_id = htons (1000);
+		send_icmphdr.icmp6_seq = htons (0);
+// ICMP header checksum (16 bits): set to 0 when calculating checksum
+  		send_icmphdr.icmp6_cksum = 0;
+		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, data, strlen(datalen));
 	}
 	uint8_t *creat_send_ether_frame(char *dest_mac, char *sour_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
 
