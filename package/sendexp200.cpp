@@ -31,7 +31,7 @@ class package{
 	public:
 		void printfhex(char *str,int num){
 			for(int i=0; i<num ;i++){
-				if(str[i]!=NULL){
+				if(str[i]!= 0){
 					printf("%x",str[i]);
 				}
 			}
