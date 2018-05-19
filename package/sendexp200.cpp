@@ -207,7 +207,7 @@ class package{
 		send_icmphdr.icmp6_seq = htons (0);
 // ICMP header checksum (16 bits): set to 0 when calculating checksum
   		send_icmphdr.icmp6_cksum = 0;
-		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, data, strlen(data));
+		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, strlen(data));
 	}
 	uint8_t *creat_send_ether_frame(char *dest_mac, char *sour_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
 
