@@ -215,7 +215,15 @@ class package{
 		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, strlen(data));
 		return send_icmphdr;
 	}
-	uint8_t *creat_send_ether_frame(Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
+	uint8_t *creat_send_ether_frame(Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr,char *data){
+		uint8_t send_ether_frame=allocate(IP_MAXPACKET);
+		memcpy(send_ether_frame,send_iphdr.ip6_dst,6);
+		memcpy(send_ether_frame+6,send_iphdr.ip6_dst,6);
+		send_ether_frame[12] = ETH_P_IPV6 / 256;
+  		send_ether_frame[13] = ETH_P_IPV6 % 256;
+  		memcpy(send_ether_frame+ETH_HDRLEN,send_iphdr,IP6_HDRLEN*sizeof(uint8_t));
+  		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN, &send_icmphdr, ICMP_HDRLEN * sizeof (uint8_t));
+  		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN + ICMP_HDRLEN, data, strlen(data) * sizeof (uint8_t));
 
 
 	}
@@ -253,12 +261,15 @@ int main(void){
 //	pak->printfhex(sour_mac,6);
 	
 	char *data="WongWong Test";
-
+	
 	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip,"bbbb::100",strlen(data));
 //	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
 	icmp6_hdr icmp6hdr=pak->creat_Icmphdr(200, 0 , ipv6_header  ,data);
 
 	printf( "%d\n",icmp6hdr.icmp6_type);
+
+	pak->creat_send_ether_frame(ipv6_header,icmp6hdr,data);
+
 //	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
 
 	return 0;
