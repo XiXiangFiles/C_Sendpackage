@@ -199,8 +199,10 @@ class package{
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
   		}
+  		return send_iphdr;
 	}
-	icmp6_hdr creat_Icmphdr(int icmp6_type, int icmp6_code , Ip6Hdr send_iphdr , Icmp6Hdr send_icmphdr ,char *data){
+	icmp6_hdr creat_Icmphdr(int icmp6_type, int icmp6_code , Ip6Hdr send_iphdr  ,char *data){
+		Icmp6Hdr send_icmphdr;
 		send_icmphdr.icmp6_type =icmp6_type;
 		send_icmphdr.icmp6_code = icmp6_code;
 		send_icmphdr.icmp6_id = htons (1000);
@@ -208,6 +210,7 @@ class package{
 // ICMP header checksum (16 bits): set to 0 when calculating checksum
   		send_icmphdr.icmp6_cksum = 0;
 		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, strlen(data));
+		retrun send_icmphdr;
 	}
 	uint8_t *creat_send_ether_frame(char *dest_mac, char *sour_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
 
@@ -215,7 +218,7 @@ class package{
 	}
 };
 int main(void){
-	char *dest_mac,*sour_mac;
+	char *dest_mac,*sour_mac,*ip;
 	char *interface="wlan0";
 	package *pak=new package();
 
@@ -235,10 +238,18 @@ int main(void){
 	ArrayList *listip6=new ArrayList(); 
 	listip6=pak->ipv6_ip();
 	for(int i=0 ; i< listip6->length(); i++){
+		char *str= listip6->pop();
+		if(strstr(str,"bbbb")){
+			memcpy(ip,str,INET6_ADDRSTRLEN);
+		}
 		printf("ip6[%d]=%s\n",i,listip6->pop());
 	}
 	pak->printfhex(sour_mac,6);
+	
+	char *data="WongWong Test";
 
+	Ip6Hdr ipv_header=pak->creat_IPv6Header(dest_mac,source,ip,"bbbb::100",strlen(data));
+	
 	return 0;
 }
 
