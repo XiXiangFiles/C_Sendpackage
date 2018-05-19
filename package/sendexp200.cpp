@@ -184,12 +184,19 @@ class package{
 		}
 	}
 	Ip6Hdr creat_IPv6Header(char *dest_mac, char *sour_mac , char *src_ip, char *dest_ip,int datalen){
+	 
+
+		
 		int status;
 		Ip6Hdr send_iphdr;
 		send_iphdr.ip6_flow = htonl ((6 << 28) | (0 << 20) | 0);
 		send_iphdr.ip6_plen = htons (ICMP_HDRLEN + datalen);
 		send_iphdr.ip6_nxt = IPPROTO_ICMPV6;
 		send_iphdr.ip6_hops = 255;
+		
+		
+
+		
 		if ((status = inet_pton (AF_INET6, src_ip, &(send_iphdr.ip6_src))) != 1) {
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
@@ -199,7 +206,9 @@ class package{
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
   		}
+		
   		return send_iphdr;
+		
 	}
 	icmp6_hdr creat_Icmphdr(int icmp6_type, int icmp6_code , Ip6Hdr send_iphdr  ,char *data){
 		Icmp6Hdr send_icmphdr;
@@ -210,7 +219,7 @@ class package{
 // ICMP header checksum (16 bits): set to 0 when calculating checksum
   		send_icmphdr.icmp6_cksum = 0;
 		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, strlen(data));
-		retrun send_icmphdr;
+		return send_icmphdr;
 	}
 	uint8_t *creat_send_ether_frame(char *dest_mac, char *sour_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
 
@@ -240,16 +249,19 @@ int main(void){
 	for(int i=0 ; i< listip6->length(); i++){
 		char *str= listip6->pop();
 		if(strstr(str,"bbbb")){
-			memcpy(ip,str,INET6_ADDRSTRLEN);
+			ip=(char *)malloc(sizeof(char) * INET6_ADDRSTRLEN);
+			ip=str;
+			printf("%s\n",ip);
+		//	memcpy(ip,str,INET6_ADDRSTRLEN);
 		}
-		printf("ip6[%d]=%s\n",i,listip6->pop());
+	//	printf("ip6[%d]=%s\n",i,listip6->pop());
 	}
 	pak->printfhex(sour_mac,6);
 	
 	char *data="WongWong Test";
 
-	Ip6Hdr ipv_header=pak->creat_IPv6Header(dest_mac,source,ip,"bbbb::100",strlen(data));
-	
+	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip,"bbbb::100",strlen(data));
+//	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
 	return 0;
 }
 
