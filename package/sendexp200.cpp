@@ -62,7 +62,7 @@ class package{
 				perror("Fail to get mac at creat socket.");
 				exit(0);
 			}
-			printf("interface= %s \n",*interface);
+			printf("getmac (interface=%s)\n",*interface);
 			if((ioctl(status,SIOCGIFHWADDR,&ifr))<0){
 				perror("failed to get mac addr");
 				exit(0);
@@ -206,7 +206,6 @@ class package{
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
   		}
-		
   		return send_iphdr;
 		
 	}
@@ -251,17 +250,17 @@ int main(void){
 		if(strstr(str,"bbbb")){
 			ip=(char *)malloc(sizeof(char) * INET6_ADDRSTRLEN);
 			ip=str;
-			printf("%s\n",ip);
+//			printf("%s\n",ip);
 		//	memcpy(ip,str,INET6_ADDRSTRLEN);
 		}
 	//	printf("ip6[%d]=%s\n",i,listip6->pop());
 	}
-	pak->printfhex(sour_mac,6);
+//	pak->printfhex(sour_mac,6);
 	
 	char *data="WongWong Test";
 
 	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip,"bbbb::100",strlen(data));
-//	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
+//	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
 	return 0;
 }
 
