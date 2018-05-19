@@ -209,7 +209,7 @@ class package{
   		return send_iphdr;
 		
 	}
-	icmp6_hdr creat_Icmphdr(int icmp6_type, int icmp6_code , Ip6Hdr send_iphdr  ,int datalen){
+	icmp6_hdr creat_Icmphdr(int icmp6_type, int icmp6_code , Ip6Hdr send_iphdr  ,char *data){
 		Icmp6Hdr send_icmphdr;
 		send_icmphdr.icmp6_type =icmp6_type;
 		send_icmphdr.icmp6_code = icmp6_code;
@@ -217,7 +217,7 @@ class package{
 		send_icmphdr.icmp6_seq = htons (0);
 // ICMP header checksum (16 bits): set to 0 when calculating checksum
   		send_icmphdr.icmp6_cksum = 0;
-		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, datalen);
+		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, strlen(data));
 		return send_icmphdr;
 	}
 	uint8_t *creat_send_ether_frame(char *dest_mac, char *sour_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
@@ -261,9 +261,10 @@ int main(void){
 
 	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip,"bbbb::100",strlen(data));
 //	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
-	icmp6_hdr icmp6hdr=creat_Icmphdr(200, 0 , ipv6_header  ,strlen(data));
+	icmp6_hdr icmp6hdr=pak->creat_Icmphdr(200, 0 , ipv6_header  ,data);
 
-	printfhex(icmp6hdr.icmp6_type , 4);
+	printf( "%d\n",icmp6hdr.icmp6_type);
+//	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
 
 	return 0;
 }
