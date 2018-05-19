@@ -184,19 +184,14 @@ class package{
 		}
 	}
 	Ip6Hdr creat_IPv6Header(char *dest_mac, char *sour_mac , char *src_ip, char *dest_ip,int datalen){
-	 
-
-		
+	 	
 		int status;
 		Ip6Hdr send_iphdr;
 		send_iphdr.ip6_flow = htonl ((6 << 28) | (0 << 20) | 0);
 		send_iphdr.ip6_plen = htons (ICMP_HDRLEN + datalen);
 		send_iphdr.ip6_nxt = IPPROTO_ICMPV6;
 		send_iphdr.ip6_hops = 255;
-		
-		
-
-		
+	
 		if ((status = inet_pton (AF_INET6, src_ip, &(send_iphdr.ip6_src))) != 1) {
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
@@ -220,7 +215,7 @@ class package{
 		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, strlen(data));
 		return send_icmphdr;
 	}
-	uint8_t *creat_send_ether_frame(char *dest_mac, char *sour_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
+	uint8_t *creat_send_ether_frame(Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr){
 
 
 	}
