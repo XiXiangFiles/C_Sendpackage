@@ -242,8 +242,15 @@ class package{
 
 		return device;
 	}
-	int sendpak(uint8_t send_ether_frame,struct sockaddr_ll device ,int frame_length){
-		
+	int sendpak(uint8_t *send_ether_frame,struct sockaddr_ll device ,int frame_length){
+		int sendto,status;
+		if((sendto=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+			perror("error to creat rawsocket");
+		}
+		if (( status = sendto (sendto, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
+	     	perror ("sendto() failed ");
+	      	exit (EXIT_FAILURE);
+    	}
 
 		return 0;
 	}
@@ -251,7 +258,6 @@ class package{
 int main(void){
 	char *dest_mac,*sour_mac,*ip;
 	char *interface="wlan0";
-	int sendto,status;
 	sockaddr_ll device;
 	package *pak=new package();
 
@@ -297,17 +303,12 @@ int main(void){
 
 	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 
-	// pak->sendpak(send_ether_frame,device,frame_length);
-
-	
-	if((sendto=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
-		perror("error to creat rawsocket");
+	while(true){
+		pak->sendpak(send_ether_frame,device,frame_length);
 	}
-	if (( status = sendto (sendto, &send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
-	     	perror ("sendto() failed ");
-	      	exit (EXIT_FAILURE);
-    }
 	
+
+	return 0;
 }
 
 
