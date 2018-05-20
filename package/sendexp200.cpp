@@ -217,12 +217,12 @@ class package{
 		return send_icmphdr;
 	}
 	uint8_t *creat_send_ether_frame(Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr,char *data){
-		uint8_t *send_ether_frame=allocate(IP_MAXPACKET);
-		memcpy(send_ether_frame,send_iphdr.ip6_dst,6);
-		memcpy(send_ether_frame+6,send_iphdr.ip6_dst,6);
+		uint8_t *send_ether_frame=(uint8_t *)allocate(IP_MAXPACKET);
+		memcpy(send_ether_frame,&send_iphdr.ip6_dst,6);
+		memcpy(send_ether_frame+6,&send_iphdr.ip6_dst,6);
 		send_ether_frame[12] = ETH_P_IPV6 / 256;
   		send_ether_frame[13] = ETH_P_IPV6 % 256;
-  		memcpy(send_ether_frame+ETH_HDRLEN,send_iphdr,IP6_HDRLEN*sizeof(uint8_t));
+  		memcpy(send_ether_frame+ETH_HDRLEN,&send_iphdr,IP6_HDRLEN*sizeof(uint8_t));
   		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN, &send_icmphdr, ICMP_HDRLEN * sizeof (uint8_t));
   		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN + ICMP_HDRLEN, data, strlen(data) * sizeof (uint8_t));
 
@@ -243,11 +243,11 @@ class package{
 		return device;
 	}
 	int sendpak(uint8_t send_ether_frame,struct sockaddr_ll device ,int frame_length){
-		int sendto;
+		int sendto,status;
 		if((sendto=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
 			perror("error to creat rawsocket");
 		}
-		if ((bytes = sendto (sendsd, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
+		if (( status = sendto (sendto, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
 	     	perror ("sendto() failed ");
 	      	exit (EXIT_FAILURE);
     	}
