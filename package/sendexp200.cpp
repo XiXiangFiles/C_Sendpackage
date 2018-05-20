@@ -33,6 +33,9 @@ typedef struct icmp6_hdr Icmp6Hdr;
 typedef struct sockaddr_ll sockaddr_ll;
 
 class package{
+	private:
+
+		uint8_t *send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
 	public:
 		void printfhex(char *str,int num){
 			for(int i=0; i<num ;i++){
@@ -216,10 +219,11 @@ class package{
 		send_icmphdr.icmp6_cksum = icmp6_checksum (send_iphdr, send_icmphdr, (uint8_t *)data, strlen(data));
 		return send_icmphdr;
 	}
-	uint8_t *creat_send_ether_frame(Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr,char *data){
-		uint8_t *send_ether_frame=(uint8_t *)allocate(IP_MAXPACKET);
-		memcpy(send_ether_frame,&send_iphdr.ip6_dst,6);
-		memcpy(send_ether_frame+6,&send_iphdr.ip6_dst,6);
+	uint8_t *creat_send_ether_frame(char *dst_mac,char *src_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr,char *data){
+		
+		//uint8_t send_ether_frame[IP_MAXPACKET];
+		memcpy(send_ether_frame,dst_mac,6);
+		memcpy(send_ether_frame+6,src_mac,6);
 		send_ether_frame[12] = ETH_P_IPV6 / 256;
   		send_ether_frame[13] = ETH_P_IPV6 % 256;
   		memcpy(send_ether_frame+ETH_HDRLEN,&send_iphdr,IP6_HDRLEN*sizeof(uint8_t));
@@ -231,7 +235,7 @@ class package{
 	}
 	sockaddr_ll fill_sockaddr(char * interface, char * src_mac){
 		sockaddr_ll device;
-
+		
 		if ((device.sll_ifindex = if_nametoindex (interface)) == 0) {
 			exit (EXIT_FAILURE);
   		}
@@ -241,6 +245,7 @@ class package{
 	 	device.sll_halen = htons (6);
 
 		return device;
+	
 	}
 	int sendpak(uint8_t *send_ether_frame,struct sockaddr_ll device ,int frame_length){
 		int send,status;
@@ -255,12 +260,22 @@ class package{
 		
 		return 0;
 	}
+	void check_frame(uint8_t *package ,int start, int end){
+		for(int i=start;i<end ; i++){
+			printf("%x",package[i]);
+			if((i%100)==0){
+				printf("\n");
+			}
+		}
+		printf("\n");
+	}
 };
 int main(void){
 	char *dest_mac,*sour_mac,*ip;
 	char *interface="wlan0";
 	sockaddr_ll device;
 	package *pak=new package();
+	uint8_t *send_ether_frame=(uint8_t*)malloc(sizeof(uint8_t)*IP_MAXPACKET);
 
 //-------------------------------allocate memory for mac address String  
 	dest_mac=pak->allocate(6);
@@ -292,21 +307,22 @@ int main(void){
 	char *data="WongWong Test";
 	
 	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip,"bbbb::100",strlen(data));
-//	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
+	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
 	icmp6_hdr icmp6hdr=pak->creat_Icmphdr(200, 0 , ipv6_header  ,data);
-
 	printf( "%d\n",icmp6hdr.icmp6_type);
 
-	uint8_t *send_ether_frame=pak->creat_send_ether_frame(ipv6_header,icmp6hdr,data);
+	send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
 //	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
 
-	device=pak->fill_sockaddr(sour_mac,interface);
+//	device=pak->fill_sockaddr(sour_mac,interface);
 
-	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
-
-	//while(true){
-		pak->sendpak(send_ether_frame,device,frame_length);
+//	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 	
+	pak->check_frame(send_ether_frame,0,100 );
+	printf("e04\n");
+//	while(true){
+	//	pak->sendpak(send_ether_frame,device,frame_length);
+//	}	
 	
 
 	return 0;
