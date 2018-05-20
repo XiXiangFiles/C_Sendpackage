@@ -319,7 +319,7 @@ int main(void){
 //	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 	
 	pak->check_frame(send_ether_frame,0,100 );
-	printf("e04\n");
+	printf("test \n");
 //	while(true){
 	//	pak->sendpak(send_ether_frame,device,frame_length);
 //	}	
