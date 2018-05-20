@@ -217,7 +217,7 @@ class package{
 		return send_icmphdr;
 	}
 	uint8_t *creat_send_ether_frame(Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr,char *data){
-		uint8_t send_ether_frame=allocate(IP_MAXPACKET);
+		uint8_t *send_ether_frame=allocate(IP_MAXPACKET);
 		memcpy(send_ether_frame,send_iphdr.ip6_dst,6);
 		memcpy(send_ether_frame+6,send_iphdr.ip6_dst,6);
 		send_ether_frame[12] = ETH_P_IPV6 / 256;
@@ -226,6 +226,7 @@ class package{
   		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN, &send_icmphdr, ICMP_HDRLEN * sizeof (uint8_t));
   		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN + ICMP_HDRLEN, data, strlen(data) * sizeof (uint8_t));
 
+  		return send_ether_frame;
 
 	}
 	sockaddr_ll fill_sockaddr(char * interface, char * src_mac){
@@ -295,7 +296,7 @@ int main(void){
 
 	printf( "%d\n",icmp6hdr.icmp6_type);
 
-	uint8_t send_ether_frame=pak->creat_send_ether_frame(ipv6_header,icmp6hdr,data);
+	uint8_t *send_ether_frame=pak->creat_send_ether_frame(ipv6_header,icmp6hdr,data);
 //	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
 
 	device=pak->fill_sockaddr(sour_mac,interface);
