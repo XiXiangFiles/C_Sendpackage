@@ -73,6 +73,7 @@ class package{
 			}
 
 			memcpy(mac,ifr.ifr_hwaddr.sa_data,sizeof(ifr.ifr_hwaddr.sa_data));	
+			close (status);
 			return mac;
 		}
 
@@ -205,6 +206,7 @@ class package{
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
   		}
+  		close (status);
   		return send_iphdr;
 		
 	}
@@ -262,7 +264,7 @@ class package{
     			}
 
 		}
-				
+		close (send);	
 		return 0;
 	}
 	void check_frame(uint8_t *package ,int start, int end){
