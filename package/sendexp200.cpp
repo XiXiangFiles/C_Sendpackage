@@ -235,10 +235,11 @@ class package{
 	}
 	sockaddr_ll fill_sockaddr(char * interface, char * src_mac){
 		sockaddr_ll device;
-		
+		/*
 		if ((device.sll_ifindex = if_nametoindex (interface)) == 0) {
 			exit (EXIT_FAILURE);
   		}
+		*/
   		printf ("Index for interface %s is %i\n", interface, device.sll_ifindex);
 		device.sll_family = AF_PACKET;
 		memcpy (device.sll_addr, src_mac, 6 * sizeof (uint8_t));
@@ -314,14 +315,14 @@ int main(void){
 	send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
 //	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
 
-//	device=pak->fill_sockaddr(sour_mac,interface);
+	device=pak->fill_sockaddr(sour_mac,interface);
 
-//	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
+	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 	
-	pak->check_frame(send_ether_frame,0,100 );
+	pak->check_frame(send_ether_frame,54,100 );
 	printf("test \n");
 //	while(true){
-	//	pak->sendpak(send_ether_frame,device,frame_length);
+//		pak->sendpak(send_ether_frame,device,frame_length);
 //	}	
 	
 
