@@ -30,6 +30,7 @@
 
 typedef struct ip6_hdr Ip6Hdr;
 typedef struct icmp6_hdr Icmp6Hdr;
+typedef struct sockaddr_ll sockaddr_ll;
 
 class package{
 	public:
@@ -227,10 +228,36 @@ class package{
 
 
 	}
+	sockaddr_ll fill_sockaddr(char * interface, char * src_mac){
+		sockaddr_ll device;
+
+		if ((device.sll_ifindex = if_nametoindex (interface)) == 0) {
+			exit (EXIT_FAILURE);
+  		}
+  		printf ("Index for interface %s is %i\n", interface, device.sll_ifindex);
+		device.sll_family = AF_PACKET;
+		memcpy (device.sll_addr, src_mac, 6 * sizeof (uint8_t));
+	 	device.sll_halen = htons (6);
+
+		return device;
+	}
+	int sendpak(uint8_t send_ether_frame,struct sockaddr_ll device ,int frame_length){
+		int sendto;
+		if((sendto=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+			perror("error to creat rawsocket");
+		}
+		if ((bytes = sendto (sendsd, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
+	     	perror ("sendto() failed ");
+	      	exit (EXIT_FAILURE);
+    	}
+
+		return 0;
+	}
 };
 int main(void){
 	char *dest_mac,*sour_mac,*ip;
 	char *interface="wlan0";
+	sockaddr_ll device;
 	package *pak=new package();
 
 //-------------------------------allocate memory for mac address String  
@@ -268,9 +295,14 @@ int main(void){
 
 	printf( "%d\n",icmp6hdr.icmp6_type);
 
-	pak->creat_send_ether_frame(ipv6_header,icmp6hdr,data);
-
+	uint8_t send_ether_frame=pak->creat_send_ether_frame(ipv6_header,icmp6hdr,data);
 //	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
+
+	device=pak->fill_sockaddr(sour_mac,interface);
+
+	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
+
+	pak->sendpak(send_ether_frame,device,frame_length);
 
 	return 0;
 }
