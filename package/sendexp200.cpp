@@ -233,13 +233,9 @@ class package{
   		return send_ether_frame;
 
 	}
-	sockaddr_ll fill_sockaddr(char * interface, char * src_mac){
+	sockaddr_ll fill_sockaddr(char *interface, char * src_mac){
 		int status;
 		sockaddr_ll device;
-		
-		if((status=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
-			perror("error to creat rawsocket");
-		}
 
 		if ((device.sll_ifindex = if_nametoindex (interface)) == 0) {
 			exit (EXIT_FAILURE);
@@ -255,15 +251,18 @@ class package{
 	}
 	int sendpak(uint8_t *send_ether_frame,struct sockaddr_ll device ,int frame_length){
 		int send,status;
-		if((send=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
-			perror("error to creat rawsocket");
+		while(1){
+			if((send=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+				perror("error to creat rawsocket");
+			}
+		
+			if (( status = sendto (send, &send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
+			     	perror ("sendto() failed ");
+	      			exit (EXIT_FAILURE);
+    			}
+
 		}
-		
-		if (( status = sendto (send, &send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
-	     	perror ("sendto() failed ");
-	      	exit (EXIT_FAILURE);
-    	}
-		
+				
 		return 0;
 	}
 	void check_frame(uint8_t *package ,int start, int end){
@@ -320,16 +319,15 @@ int main(void){
 	send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
 //	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
 
-	device=pak->fill_sockaddr(sour_mac,interface);
+	device=pak->fill_sockaddr(interface,sour_mac);
 
 	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 	
 	pak->check_frame(send_ether_frame,54,100 );
-	printf("test \n");
-//	while(true){
-//		pak->sendpak(send_ether_frame,device,frame_length);
-//	}	
 	
+	pak->sendpak(send_ether_frame,device,frame_length);
+	
+	printf("test \n");
 
 	return 0;
 }
