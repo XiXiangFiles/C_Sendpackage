@@ -234,12 +234,17 @@ class package{
 
 	}
 	sockaddr_ll fill_sockaddr(char * interface, char * src_mac){
+		int status;
 		sockaddr_ll device;
-		/*
+		
+		if((status=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+			perror("error to creat rawsocket");
+		}
+
 		if ((device.sll_ifindex = if_nametoindex (interface)) == 0) {
 			exit (EXIT_FAILURE);
   		}
-		*/
+		
   		printf ("Index for interface %s is %i\n", interface, device.sll_ifindex);
 		device.sll_family = AF_PACKET;
 		memcpy (device.sll_addr, src_mac, 6 * sizeof (uint8_t));
