@@ -73,7 +73,7 @@ class package{
 			}
 
 			memcpy(mac,ifr.ifr_hwaddr.sa_data,sizeof(ifr.ifr_hwaddr.sa_data));	
-			close (status);
+	//		close (status);
 			return mac;
 		}
 
@@ -202,11 +202,11 @@ class package{
     		exit (EXIT_FAILURE);
   		}
 
-  		if ((status = inet_pton (AF_INET6, src_ip, &(send_iphdr.ip6_dst))) != 1) {
+  		if ((status = inet_pton (AF_INET6, dest_ip, &(send_iphdr.ip6_dst))) != 1) {
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     		exit (EXIT_FAILURE);
   		}
-  		close (status);
+  	//	close (status);
   		return send_iphdr;
 		
 	}
@@ -253,25 +253,24 @@ class package{
 	}
 	int sendpak(uint8_t *send_ether_frame,struct sockaddr_ll device ,int frame_length){
 		int send,status;
-		while(1){
-			if((send=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+		if((send=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
 				perror("error to creat rawsocket");
-			}
-		
-			if (( status = sendto (send, &send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
+		}
+		while(1){	
+			if (( status = sendto (send, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
 			     	perror ("sendto() failed ");
 	      			exit (EXIT_FAILURE);
     			}
 
 		}
-		close (send);	
+//		close (send);	
 		return 0;
 	}
 	void check_frame(uint8_t *package ,int start, int end){
 		for(int i=start;i<end ; i++){
 			printf("%x",package[i]);
 			if((i%100)==0){
-				printf("\n");
+			//	printf("\n");
 			}
 		}
 		printf("\n");
@@ -325,7 +324,7 @@ int main(void){
 
 	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 	
-	pak->check_frame(send_ether_frame,54,100 );
+	pak->check_frame(send_ether_frame,0,frame_length );
 	
 	pak->sendpak(send_ether_frame,device,frame_length);
 	
