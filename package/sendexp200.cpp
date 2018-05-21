@@ -34,8 +34,8 @@ typedef struct sockaddr_ll sockaddr_ll;
 
 class package{
 	private:
-
 		uint8_t *send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+		uint8_t *from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
 	public:
 		void printfhex(char *str,int num){
 			for(int i=0; i<num ;i++){
@@ -266,6 +266,20 @@ class package{
 //		close (send);	
 		return 0;
 	}
+	uint8_t receive_pak(){
+		int receive,from;
+		sockaddr_ll sockaddr;
+		
+		if((from=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+			perror("error to creat rawsocket");
+		}
+		/*
+		if((receive=recvfrom(from,from_ether_frame,IP_MAXPACKET,0,(struct sockaddr *)&from ) ,&fromlen )<0){
+			perror("receive recvform failed.");
+		}
+		*/
+	}
+
 	void check_frame(uint8_t *package ,int start, int end){
 		for(int i=start;i<end ; i++){
 			printf("%x",package[i]);
