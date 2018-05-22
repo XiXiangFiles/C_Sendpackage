@@ -34,9 +34,13 @@ typedef struct sockaddr_ll sockaddr_ll;
 
 class package{
 	private:
-		uint8_t *send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
-		uint8_t *from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+		uint8_t *send_ether_frame;
+		uint8_t *from_ether_frame;
 	public:
+		package(){
+			*send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+			*from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+		}
 		void printfhex(char *str,int num){
 			for(int i=0; i<num ;i++){
 				if(str[i]!= 0){
@@ -267,17 +271,21 @@ class package{
 		return 0;
 	}
 	uint8_t receive_pak(){
-		int receive,from;
+		int recvsd,receive;
 		sockaddr_ll sockaddr;
+		struct sockaddr from;
+		socklen_t fromlen=sizeof (from);;
 		
-		if((from=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+		if((recvsd=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
 			perror("error to creat rawsocket");
 		}
-		/*
-		if((receive=recvfrom(from,from_ether_frame,IP_MAXPACKET,0,(struct sockaddr *)&from ) ,&fromlen )<0){
-			perror("receive recvform failed.");
-		}
-		*/
+		// while(true){
+			if((receive=recvfrom (recvsd, from_ether_frame, IP_MAXPACKET, 0, (struct sockaddr *) &from, &fromlen))<0){
+				perror("receive recvform failed.");
+			}
+		// }
+		
+		
 	}
 
 	void check_frame(uint8_t *package ,int start, int end){
