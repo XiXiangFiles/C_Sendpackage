@@ -298,7 +298,48 @@ class package{
 		printf("\n");
 	}
 };
+void sendpackage(char *interface="wlan0",char *IPv6, int icmptype,int code,char *data){
+	char *dest_mac,*sour_mac,*ip;
+	sockaddr_ll device;
+	package *pak=new package();
+	uint8_t *send_ether_frame=(uint8_t*)malloc(sizeof(uint8_t)*IP_MAXPACKET);
+	dest_mac=pak->allocate(6);
+	sour_mac=pak->allocate(6);
+	memcpy(sour_mac,pak->getmac(&interface),6);
+	dest_mac[0]=0xff;	
+	dest_mac[1]=0xff;	
+	dest_mac[2]=0xff;
+	dest_mac[3]=0xff;
+	dest_mac[4]=0xff;	
+	dest_mac[5]=0xff;
+	ArrayList *listip6=new ArrayList(); 
+	listip6=pak->ipv6_ip();
+	for(int i=0 ; i< listip6->length(); i++){
+		char *str= listip6->pop();
+		if(strstr(str,"bbbb")){
+			ip=(char *)malloc(sizeof(char) * INET6_ADDRSTRLEN);
+			ip=str;
+//			printf("%s\n",ip);
+		//	memcpy(ip,str,INET6_ADDRSTRLEN);
+		}
+	//	printf("ip6[%d]=%s\n",i,listip6->pop());
+	}
+
+	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip, IPv6 ,strlen(data));
+	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
+	icmp6_hdr icmp6hdr=pak->creat_Icmphdr(icmptype, code , ipv6_header  ,data);
+	printf( "%d\n",icmp6hdr.icmp6_type);
+
+	send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
+	device=pak->fill_sockaddr(interface,sour_mac);
+	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
+	pak->check_frame(send_ether_frame,0,frame_length);
+	pak->sendpak(send_ether_frame,device,frame_length);
+
+}
+
 int main(void){
+	/*
 	char *dest_mac,*sour_mac,*ip;
 	char *interface="wlan0";
 	sockaddr_ll device;
@@ -349,10 +390,13 @@ int main(void){
 	pak->check_frame(send_ether_frame,0,frame_length );
 	
 	pak->sendpak(send_ether_frame,device,frame_length);
+
 	
 	pak->receive_pak();
 	printf("test \n");
+*/
 
+	sendpackage("wlan0","bbbb::100",200,0,"WongWong test");
 	return 0;
 }
 
