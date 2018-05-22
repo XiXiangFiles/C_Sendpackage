@@ -38,8 +38,8 @@ class package{
 		uint8_t *from_ether_frame;
 	public:
 		package(){
-			*send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
-			*from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+			send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+			from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
 		}
 		void printfhex(char *str,int num){
 			for(int i=0; i<num ;i++){
@@ -260,13 +260,13 @@ class package{
 		if((send=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
 				perror("error to creat rawsocket");
 		}
-		while(1){	
+	//	while(1){	
 			if (( status = sendto (send, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
 			     	perror ("sendto() failed ");
 	      			exit (EXIT_FAILURE);
     			}
 
-		}
+	//	}
 //		close (send);	
 		return 0;
 	}
@@ -279,12 +279,12 @@ class package{
 		if((recvsd=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
 			perror("error to creat rawsocket");
 		}
-		// while(true){
+		 while(true){
 			if((receive=recvfrom (recvsd, from_ether_frame, IP_MAXPACKET, 0, (struct sockaddr *) &from, &fromlen))<0){
 				perror("receive recvform failed.");
-			}
-		// }
-		
+			}	
+			check_frame(from_ether_frame,0,88);		
+		 }
 		
 	}
 
@@ -350,6 +350,7 @@ int main(void){
 	
 	pak->sendpak(send_ether_frame,device,frame_length);
 	
+	pak->receive_pak();
 	printf("test \n");
 
 	return 0;
