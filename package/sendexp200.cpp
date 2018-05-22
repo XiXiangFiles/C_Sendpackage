@@ -298,7 +298,7 @@ class package{
 		printf("\n");
 	}
 };
-void sendpackage(char *interface="wlan0",char *IPv6, int icmptype,int code,char *data){
+void sendpackage(char *interface,char *IPv6, int icmptype,int code,char *data){
 	char *dest_mac,*sour_mac,*ip;
 	sockaddr_ll device;
 	package *pak=new package();
