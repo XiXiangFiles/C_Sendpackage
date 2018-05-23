@@ -35,12 +35,17 @@ typedef struct sockaddr_ll sockaddr_ll;
 class package{
 	private:
 		int recvsd;
+		int send;
 		uint8_t *send_ether_frame;
 		uint8_t *from_ether_frame;
 	public:
 		package(){
 			send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
 			from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+			if((send=socket(PF_PACKET,SOCK_RAW,htons(ETH_P_ALL)))<0){
+				perror("Fail to get mac at creat socket.");
+				exit(0);
+			}
 			if((recvsd=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
 				perror("error to creat rawsocket");
 			}
@@ -71,12 +76,14 @@ class package{
 			mac=allocate(sizeof(ifr.ifr_name));
 			memset(&ifr,0,sizeof(ifr));
 			snprintf(ifr.ifr_name,sizeof(ifr.ifr_name),"%s", *interface);
+			/*
 			if((status=socket(PF_PACKET,SOCK_RAW,htons(ETH_P_ALL)))<0){
 				perror("Fail to get mac at creat socket.");
 				exit(0);
 			}
+			*/
 			printf("getmac (interface=%s)\n",*interface);
-			if((ioctl(status,SIOCGIFHWADDR,&ifr))<0){
+			if((ioctl(send,SIOCGIFHWADDR,&ifr))<0){
 				perror("failed to get mac addr");
 				exit(0);
 			}
@@ -101,6 +108,7 @@ class package{
 					ip6=allocate(INET6_ADDRSTRLEN);
 					inet_ntop(AF_INET6, ptr ,ip6,INET6_ADDRSTRLEN);//get ip
 					arr->put(ip6,INET6_ADDRSTRLEN);
+					free(ip6);
 					
 				}
 				ifaddr=ifaddr->ifa_next;
@@ -261,12 +269,12 @@ class package{
 	
 	}
 	int sendpak(uint8_t *send_ether_frame,struct sockaddr_ll device ,int frame_length){
-		int send,status;
-		if((send=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
-				perror("error to creat rawsocket");
-		}
+		int status;
+		// if((send=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+		// 		perror("error to creat rawsocket");
+		// }
 	//	while(1){	
-			if (( status = sendto (send, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
+			if (( status = sendto (this->send, send_ether_frame, frame_length, 0, (struct sockaddr *) &device, sizeof (device))) <= 0) {
 			     	perror ("sendto() failed ");
 	      			exit (EXIT_FAILURE);
     			}
@@ -282,7 +290,7 @@ class package{
 		socklen_t fromlen=sizeof (from);;
 		
 				// while(true){
-			if((receive=recvfrom (recvsd, from_ether_frame, IP_MAXPACKET, 0, (struct sockaddr *) &from, &fromlen))<0){
+			if((receive=recvfrom (this->recvsd, from_ether_frame, IP_MAXPACKET, 0, (struct sockaddr *) &from, &fromlen))<0){
 				perror("receive recvform failed.");
 			}	
 //			check_frame(from_ether_frame,0,88);		
@@ -349,12 +357,16 @@ int main(void){
 
 	package *pak=new package();
 	sendpackage(pak,"wlan0","bbbb::100",200,0,"ssdp:discover");
+	sendpackage(pak,"wlan0","bbbb::100",200,0,"ssdp:discover");
 	uint8_t recvsd[IP_MAXPACKET];
 	//pak2->receive_pak();
-	while(true){
-		memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
-		pak->check_frame(recvsd,0,84);
-	}
+	// while(true){
+	// 	memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
+	// 	if(recvsd[12]==0x86 && receive[13]==0xDD){
+	// 		pak->check_frame(recvsd,0,84);
+	// 	}
+	// 	break;
+	// }
 	
 
 	return 0;
