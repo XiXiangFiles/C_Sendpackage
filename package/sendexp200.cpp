@@ -36,12 +36,12 @@ class package{
 	private:
 		int recvsd;
 		int send;
-		uint8_t *send_ether_frame;
-		uint8_t *from_ether_frame;
+		uint8_t send_ether_frame[IP_MAXPACKET];
+		uint8_t from_ether_frame[IP_MAXPACKET];
 	public:
 		package(){
-			send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
-			from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+		//	send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+		//	from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
 			if((send=socket(PF_PACKET,SOCK_RAW,htons(ETH_P_ALL)))<0){
 				perror("Fail to get mac at creat socket.");
 				exit(0);
@@ -73,7 +73,7 @@ class package{
 			int status;
 			struct ifreq ifr;
 			char *mac;
-			mac=allocate(sizeof(ifr.ifr_name));
+			char str[6];
 			memset(&ifr,0,sizeof(ifr));
 			snprintf(ifr.ifr_name,sizeof(ifr.ifr_name),"%s", *interface);
 			/*
@@ -88,7 +88,8 @@ class package{
 				exit(0);
 			}
 
-			memcpy(mac,ifr.ifr_hwaddr.sa_data,sizeof(ifr.ifr_hwaddr.sa_data));	
+			memcpy(str,ifr.ifr_hwaddr.sa_data,sizeof(ifr.ifr_hwaddr.sa_data));
+			mac=str;	
 	//		close (status);
 			return mac;
 		}
@@ -240,15 +241,17 @@ class package{
 	}
 	uint8_t *creat_send_ether_frame(char *dst_mac,char *src_mac,Ip6Hdr send_iphdr,Icmp6Hdr send_icmphdr,char *data){
 		
-		//uint8_t send_ether_frame[IP_MAXPACKET];
-		memcpy(send_ether_frame,dst_mac,6);
-		memcpy(send_ether_frame+6,src_mac,6);
-		send_ether_frame[12] = ETH_P_IPV6 / 256;
-  		send_ether_frame[13] = ETH_P_IPV6 % 256;
-  		memcpy(send_ether_frame+ETH_HDRLEN,&send_iphdr,IP6_HDRLEN*sizeof(uint8_t));
-  		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN, &send_icmphdr, ICMP_HDRLEN * sizeof (uint8_t));
-  		memcpy (send_ether_frame + ETH_HDRLEN + IP6_HDRLEN + ICMP_HDRLEN, data, strlen(data) * sizeof (uint8_t));
-
+		uint8_t *send_ether_frame;
+		memset(this->send_ether_frame,0,IP_MAXPACKET);
+		memcpy(this->send_ether_frame,dst_mac,6);
+		memcpy(this->send_ether_frame+6,src_mac,6);
+		this->send_ether_frame[12] = ETH_P_IPV6 / 256;
+  		this->send_ether_frame[13] = ETH_P_IPV6 % 256;
+  		memcpy(this->send_ether_frame+ETH_HDRLEN,&send_iphdr,IP6_HDRLEN*sizeof(uint8_t));
+  		memcpy (this->send_ether_frame + ETH_HDRLEN + IP6_HDRLEN, &send_icmphdr, ICMP_HDRLEN * sizeof (uint8_t));
+  		memcpy (this->send_ether_frame + ETH_HDRLEN + IP6_HDRLEN + ICMP_HDRLEN, data, strlen(data) * sizeof (uint8_t));
+		
+		send_ether_frame=this->send_ether_frame;
   		return send_ether_frame;
 
 	}
@@ -288,9 +291,10 @@ class package{
 		sockaddr_ll sockaddr;
 		struct sockaddr from;
 		socklen_t fromlen=sizeof (from);;
-		
-				// while(true){
-			if((receive=recvfrom (this->recvsd, from_ether_frame, IP_MAXPACKET, 0, (struct sockaddr *) &from, &fromlen))<0){
+		uint8_t *from_ether_frame;
+		memset(this->from_ether_frame,0,IP_MAXPACKET);	
+				// while(true)r{
+			if((receive=recvfrom (this->recvsd, this->from_ether_frame, IP_MAXPACKET, 0, (struct sockaddr *) &from, &fromlen))<0){
 				perror("receive recvform failed.");
 			}	
 //			check_frame(from_ether_frame,0,88);		
@@ -312,12 +316,15 @@ class package{
 //		free(from_ether_frame );
 	}
 };
-void sendpackage(package *pak,char *interface,char *IPv6, int icmptype,int code,char *data){
-	char *dest_mac,*sour_mac,*ip;
+void sendpackage(package *pak,char *interface,char *ip,char *IPv6, int icmptype,int code,char *data){
+	char dest_mac[6];
+	char sour_mac[6];
 	sockaddr_ll device;
-	uint8_t *send_ether_frame=(uint8_t*)malloc(sizeof(uint8_t)*IP_MAXPACKET);
-	dest_mac=pak->allocate(6);
-	sour_mac=pak->allocate(6);
+	
+//	uint8_t *send_ether_frame=(uint8_t*)malloc(sizeof(uint8_t)*IP_MAXPACKET);
+	
+//	dest_mac=pak->allocate(6);
+//	sour_mac=pak->allocate(6);
 	memcpy(sour_mac,pak->getmac(&interface),6);
 	dest_mac[0]=0xff;	
 	dest_mac[1]=0xff;	
@@ -325,49 +332,54 @@ void sendpackage(package *pak,char *interface,char *IPv6, int icmptype,int code,
 	dest_mac[3]=0xff;
 	dest_mac[4]=0xff;	
 	dest_mac[5]=0xff;
-	ArrayList *listip6=new ArrayList(); 
-	listip6=pak->ipv6_ip();
-	for(int i=0 ; i< listip6->length(); i++){
-		char *str= listip6->pop();
-		if(strstr(str,"bbbb")){
-			ip=(char *)malloc(sizeof(char) * INET6_ADDRSTRLEN);
-			ip=str;
-//			printf("%s\n",ip);
-		//	memcpy(ip,str,INET6_ADDRSTRLEN);
-		}
-	//	printf("ip6[%d]=%s\n",i,listip6->pop());
-	}
+//	printf("%s\n",dest_mac);
 
 	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip, IPv6 ,strlen(data));
 	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
 	icmp6_hdr icmp6hdr=pak->creat_Icmphdr(icmptype, code , ipv6_header  ,data);
 	printf( "%d\n",icmp6hdr.icmp6_type);
 
-	send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
+	uint8_t *send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
 	device=pak->fill_sockaddr(interface,sour_mac);
 	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 	pak->check_frame(send_ether_frame,0,frame_length);
 	pak->sendpak(send_ether_frame,device,frame_length);
+//	pak->sendpak(send_ether_frame,device,frame_length);
 //	pak->freepak();
-	free(dest_mac);
-	free(sour_mac);
+//	free(dest_mac);
+//	free(sour_mac);
 }
-
 int main(void){
 
 	package *pak=new package();
-	sendpackage(pak,"wlan0","bbbb::100",200,0,"ssdp:discover");
-	sendpackage(pak,"wlan0","bbbb::100",200,0,"ssdp:discover");
 	uint8_t recvsd[IP_MAXPACKET];
+	char ip[INET6_ADDRSTRLEN];	
+	ArrayList *listip6=new ArrayList(); 
+	listip6=pak->ipv6_ip();
+	for(int i=0 ; i< listip6->length(); i++){
+		char *str= listip6->pop();
+		if(strstr(str,"bbbb")){
+			//ip=(char *)malloc(sizeof(char) * INET6_ADDRSTRLEN);
+		//	ip=str;
+//			printf("%s\n",ip);
+			memcpy(ip,str,INET6_ADDRSTRLEN);							
+		}
+		printf("ip6[%d]=%s\n",i,str);								
+	}
+	for(int i=0 ; i<1000; i++){
+		printf("i=%d\n",i);
+		sendpackage(pak,"wlan0",ip,"bbbb::100",200,0,"ssdp:discover");
+	}
 	//pak2->receive_pak();
-	// while(true){
-	// 	memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
-	// 	if(recvsd[12]==0x86 && receive[13]==0xDD){
-	// 		pak->check_frame(recvsd,0,84);
-	// 	}
-	// 	break;
-	// }
-	
+/*
+	while(true){
+		memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
+		if(recvsd[12]==0x86 && recvsd[13]==0xDD){
+			pak->check_frame(recvsd,0,84);
+		}
+		break;
+	}
+*/	
 
 	return 0;
 }
