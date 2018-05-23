@@ -34,12 +34,17 @@ typedef struct sockaddr_ll sockaddr_ll;
 
 class package{
 	private:
+		int recvsd;
 		uint8_t *send_ether_frame;
 		uint8_t *from_ether_frame;
 	public:
 		package(){
 			send_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
 			from_ether_frame=(uint8_t *) malloc (IP_MAXPACKET * sizeof (uint8_t));
+			if((recvsd=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
+				perror("error to creat rawsocket");
+			}
+
 		}
 		void printfhex(char *str,int num){
 			for(int i=0; i<num ;i++){
@@ -270,22 +275,19 @@ class package{
 //		close (send);	
 		return 0;
 	}
-	uint8_t receive_pak(){
-		int recvsd,receive;
+	uint8_t *receive_pak(){
+		int receive;
 		sockaddr_ll sockaddr;
 		struct sockaddr from;
 		socklen_t fromlen=sizeof (from);;
 		
-		if((recvsd=socket(PF_PACKET, SOCK_RAW, htons (ETH_P_ALL)))<0){
-			perror("error to creat rawsocket");
-		}
-		 while(true){
+				// while(true){
 			if((receive=recvfrom (recvsd, from_ether_frame, IP_MAXPACKET, 0, (struct sockaddr *) &from, &fromlen))<0){
 				perror("receive recvform failed.");
 			}	
-			check_frame(from_ether_frame,0,88);		
-		 }
-		
+//			check_frame(from_ether_frame,0,88);		
+		// }
+		return from_ether_frame;
 	}
 
 	void check_frame(uint8_t *package ,int start, int end){
@@ -297,11 +299,14 @@ class package{
 		}
 		printf("\n");
 	}
+	void freepak(){
+//		free(send_ether_frame);
+//		free(from_ether_frame );
+	}
 };
-void sendpackage(char *interface,char *IPv6, int icmptype,int code,char *data){
+void sendpackage(package *pak,char *interface,char *IPv6, int icmptype,int code,char *data){
 	char *dest_mac,*sour_mac,*ip;
 	sockaddr_ll device;
-	package *pak=new package();
 	uint8_t *send_ether_frame=(uint8_t*)malloc(sizeof(uint8_t)*IP_MAXPACKET);
 	dest_mac=pak->allocate(6);
 	sour_mac=pak->allocate(6);
@@ -335,68 +340,23 @@ void sendpackage(char *interface,char *IPv6, int icmptype,int code,char *data){
 	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
 	pak->check_frame(send_ether_frame,0,frame_length);
 	pak->sendpak(send_ether_frame,device,frame_length);
-
+//	pak->freepak();
+	free(dest_mac);
+	free(sour_mac);
 }
 
 int main(void){
-	/*
-	char *dest_mac,*sour_mac,*ip;
-	char *interface="wlan0";
-	sockaddr_ll device;
+
 	package *pak=new package();
-	uint8_t *send_ether_frame=(uint8_t*)malloc(sizeof(uint8_t)*IP_MAXPACKET);
-
-//-------------------------------allocate memory for mac address String  
-	dest_mac=pak->allocate(6);
-	sour_mac=pak->allocate(6);
-//	pak->getmac(&interface);
-	memcpy(sour_mac,pak->getmac(&interface),6);
-	
-	dest_mac[0]=0xff;	
-	dest_mac[1]=0xff;	
-	dest_mac[2]=0xff;
-	dest_mac[3]=0xff;
-	dest_mac[4]=0xff;	
-	dest_mac[5]=0xff;
-
-	ArrayList *listip6=new ArrayList(); 
-	listip6=pak->ipv6_ip();
-	for(int i=0 ; i< listip6->length(); i++){
-		char *str= listip6->pop();
-		if(strstr(str,"bbbb")){
-			ip=(char *)malloc(sizeof(char) * INET6_ADDRSTRLEN);
-			ip=str;
-//			printf("%s\n",ip);
-		//	memcpy(ip,str,INET6_ADDRSTRLEN);
-		}
-	//	printf("ip6[%d]=%s\n",i,listip6->pop());
+	sendpackage(pak,"wlan0","bbbb::100",200,0,"ssdp:discover");
+	uint8_t recvsd[IP_MAXPACKET];
+	//pak2->receive_pak();
+	while(true){
+		memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
+		pak->check_frame(recvsd,0,84);
 	}
-//	pak->printfhex(sour_mac,6);
 	
-	char *data="WongWong Test";
-	
-	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip,"bbbb::100",strlen(data));
-	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
-	icmp6_hdr icmp6hdr=pak->creat_Icmphdr(200, 0 , ipv6_header  ,data);
-	printf( "%d\n",icmp6hdr.icmp6_type);
 
-	send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
-//	printf("test ip6hdr hops=%d",ipv6_header->ip6_hops);	
-
-	device=pak->fill_sockaddr(interface,sour_mac);
-
-	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
-	
-	pak->check_frame(send_ether_frame,0,frame_length );
-	
-	pak->sendpak(send_ether_frame,device,frame_length);
-
-	
-	pak->receive_pak();
-	printf("test \n");
-*/
-
-	sendpackage("wlan0","bbbb::100",200,0,"WongWong test");
 	return 0;
 }
 
