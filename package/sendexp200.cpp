@@ -299,6 +299,7 @@ class package{
 			}	
 //			check_frame(from_ether_frame,0,88);		
 		// }
+			from_ether_frame=this->from_ether_frame;
 		return from_ether_frame;
 	}
 
@@ -359,27 +360,24 @@ int main(void){
 	for(int i=0 ; i< listip6->length(); i++){
 		char *str= listip6->pop();
 		if(strstr(str,"bbbb")){
-			//ip=(char *)malloc(sizeof(char) * INET6_ADDRSTRLEN);
-		//	ip=str;
-//			printf("%s\n",ip);
 			memcpy(ip,str,INET6_ADDRSTRLEN);							
 		}
 		printf("ip6[%d]=%s\n",i,str);								
 	}
-	for(int i=0 ; i<1000; i++){
-		printf("i=%d\n",i);
-		sendpackage(pak,"wlan0",ip,"bbbb::100",200,0,"ssdp:discover");
+
+	for(int i=0 ; i<3; i++){
+		// printf("i=%d\n",i);
+		sendpackage(pak,"wlan0",ip,"bbbb::2903:c560:e4a1:ece7",200,0,"ssdp:discover");
 	}
-	//pak2->receive_pak();
-/*
+
 	while(true){
 		memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
 		if(recvsd[12]==0x86 && recvsd[13]==0xDD){
 			pak->check_frame(recvsd,0,84);
 		}
-		break;
+		//break;
 	}
-*/	
+
 
 	return 0;
 }
