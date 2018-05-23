@@ -351,7 +351,7 @@ int main(void){
 	uint8_t recvsd[IP_MAXPACKET];
 	while(true){
 		memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
-		if(recvsd[12]==0x86 && receive[13]==0xDD){
+		if(recvsd[12]==0x86 && recvsd[13]==0xDD){
 			pak->check_frame(recvsd,0,84);
 			sendpackage(pak,"wlan0","bbbb::38bd:1a4c:2e50:ed98",200,1,"discover response");
 		}
