@@ -354,6 +354,66 @@ void sendpackage(package *pak,char *dst_mac,char *interface,char *ip,char *IPv6,
 //	free(dest_mac);
 //	free(sour_mac);
 }
+void decodeframe(package *pak,uint8_t *frame){
+	
+	pak->check_frame(frame,0,84);
+	
+	char src_mac[6];
+	char dst_mac[6];
+	char src_ip[16];
+	char dst_ip[16];
+	uint8_t icmp_type=frame[54];
+	uint8_t icmp_code=frame[55];
+	char data[500];
+	memcpy(src_mac,frame,6);
+	memcpy(dst_mac,frame+6,6);
+	memcpy(src_ip,frame+22,16);
+	memcpy(dst_ip,frame+38,16);
+//	memcpy(icmp_type,frame+54,1);
+//	memcpy(icmp_code,frame+55,1);	
+/*
+	printf("src_mac[0]=%x ",src_mac[0]);
+	printf("src_mac[1]=%x ",src_mac[1]);
+	printf("src_mac[2]=%x ",src_mac[2]);
+	printf("src_mac[3]=%x ",src_mac[3]);
+	printf("src_mac[4]=%x ",src_mac[4]);
+	printf("src_mac[5]=%x ",src_mac[5]);
+	printf("\n");
+	printf("dst_mac[0]=%x ",dst_mac[0]);
+	printf("dst_mac[1]=%x ",dst_mac[1]);
+	printf("dst_mac[2]=%x ",dst_mac[2]);
+	printf("dst_mac[3]=%x ",dst_mac[3]);
+	printf("dst_mac[4]=%x ",dst_mac[4]);
+	printf("dst_mac[5]=%x ",dst_mac[5]);
+	printf("\n");
+	printf("dst_ip[0]=%x ",dst_ip[0]);
+	printf("dst_ip[1]=%x ",dst_ip[1]);
+	printf("dst_ip[2]=%x ",dst_ip[2]);
+	printf("dst_ip[3]=%x ",dst_ip[3]);
+	printf("dst_ip[4]=%x ",dst_ip[4]);
+	printf("dst_ip[5]=%x ",dst_ip[5]);
+	printf("dst_ip[6]=%x ",dst_ip[6]);
+	printf("dst_ip[7]=%x ",dst_ip[7]);
+	printf("dst_ip[8]=%x ",dst_ip[8]);
+	printf("dst_ip[9]=%x ",dst_ip[9]);
+	printf("dst_ip[10]=%x ",dst_ip[10]);
+	printf("dst_ip[11]=%x ",dst_ip[11]);
+	printf("dst_ip[12]=%x ",dst_ip[12]);
+	printf("dst_ip[13]=%x ",dst_ip[13]);
+	printf("dst_ip[14]=%x ",dst_ip[14]);
+	printf("dst_ip[15]=%x ",dst_ip[15]);
+*/
+	printf("icmp_code=%d\n",frame[55]);
+
+//	printf("dst_mac=%s\n",dst_mac);
+//	printf("src_ip=%s\n",src_ip);
+//	printf("dst_ip=%s\n",dst_ip);
+//	printf("icmp_type=%d\n",icmp_type);
+//	printf("icmp_code=%d\n",icmp_code);
+	//printf("data=%s\n",data);
+	
+
+}
 int main(void){
 
 	package *pak=new package();
@@ -374,13 +434,14 @@ int main(void){
 
 	for(int i=0 ; i<3; i++){
 		// printf("i=%d\n",i);
-		sendpackage(pak,NULL,"wlan0",ip,"bbbb::2903:c560:e4a1:ece7",200,0,"ssdp:discover");
+		sendpackage(pak,NULL,"wlan0",ip,"bbbb::100",200,0,"ssdp:discover");
 	}
 
 	while(true){
 		memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
 		if(recvsd[12]==0x86 && recvsd[13]==0xDD){
-			pak->check_frame(recvsd,0,84);
+			decodeframe(pak,recvsd);
+		//	pak->check_frame(recvsd,0,84);
 		}
 		//break;
 	}
