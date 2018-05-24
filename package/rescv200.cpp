@@ -376,7 +376,7 @@ int main(void){
 		if(recvsd[12]==0x86 && recvsd[13]==0xDD){
 			pak->check_frame(recvsd,0,84);
 			char dst_mac[6];
-			memcpy(dst_mac,pak->receive_pak(),6);
+			memcpy(dst_mac,pak->receive_pak()+6,6);
 			sendpackage(pak,dst_mac,"wlan0",ip,"bbbb::2903:c560:e4a1:ece7",200,0,"ssdp:response");
 		}
 		

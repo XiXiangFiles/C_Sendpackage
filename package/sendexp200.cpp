@@ -362,11 +362,12 @@ int main(void){
 	ArrayList *listip6=new ArrayList(); 
 	listip6=pak->ipv6_ip();
 	for(int i=0 ; i< listip6->length(); i++){
-		char *str= listip6->pop();
+		char str[INET6_ADDRSTRLEN];
+		strcpy(str,listip6->pop());
 		if(strstr(str,"bbbb")){
 			memcpy(ip,str,INET6_ADDRSTRLEN);							
 		}
-		printf("ip6[%d]=%s\n",i,str);								
+		printf("ip6[%d]=%s\n",i,str);	//刪掉會有BUGS							
 	}
 
 	for(int i=0 ; i<3; i++){
