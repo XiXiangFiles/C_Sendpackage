@@ -82,7 +82,7 @@ class package{
 				exit(0);
 			}
 			*/
-			printf("getmac (interface=%s)\n",*interface);
+//			printf("getmac (interface=%s)\n",*interface);
 			if((ioctl(send,SIOCGIFHWADDR,&ifr))<0){
 				perror("failed to get mac addr");
 				exit(0);
@@ -263,7 +263,7 @@ class package{
 			exit (EXIT_FAILURE);
   		}
 		
-  		printf ("Index for interface %s is %i\n", interface, device.sll_ifindex);
+ //		printf ("Index for interface %s is %i\n", interface, device.sll_ifindex);
 		device.sll_family = AF_PACKET;
 		memcpy (device.sll_addr, src_mac, 6 * sizeof (uint8_t));
 	 	device.sll_halen = htons (6);
@@ -340,10 +340,10 @@ void sendpackage(package *pak,char *dst_mac,char *interface,char *ip,char *IPv6,
 //	printf("%s\n",dest_mac);
 
 	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip, IPv6 ,strlen(data));
-	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
+//	printf("send_iphdr=%x\n",ipv6_header.ip6_plen ); 
 	icmp6_hdr icmp6hdr=pak->creat_Icmphdr(icmptype, code , ipv6_header  ,data);
-	printf( "%d\n",icmp6hdr.icmp6_type);
-
+	printf( "icmp type= %d\n",icmp6hdr.icmp6_type);
+	printf("icmp code= %d\n",code);
 	uint8_t *send_ether_frame=pak->creat_send_ether_frame(dest_mac,sour_mac ,ipv6_header,icmp6hdr,data);
 	device=pak->fill_sockaddr(interface,sour_mac);
 	int frame_length = 6 + 6 + 2 + IP6_HDRLEN + ICMP_HDRLEN + strlen(data);
@@ -365,10 +365,12 @@ int main(void){
 		char str[INET6_ADDRSTRLEN];
 		strcpy(str,listip6->pop());
 		if(strstr(str,"bbbb")){
-			memcpy(ip,str,INET6_ADDRSTRLEN);							
+			memcpy(ip,str,INET6_ADDRSTRLEN);
+//			printf("ip6[%d]=%s\n",i,str);	//刪掉會有BUGS							
 		}
-		printf("ip6[%d]=%s\n",i,str);	//刪掉會有BUGS							
+		printf("my ip= %s\n" , ip);
 	}
+//	printf("%s\n",ip);
 
 	for(int i=0 ; i<3; i++){
 		// printf("i=%d\n",i);
@@ -382,7 +384,6 @@ int main(void){
 		}
 		//break;
 	}
-
 
 	return 0;
 }
