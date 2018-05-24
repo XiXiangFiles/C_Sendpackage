@@ -317,7 +317,7 @@ class package{
 //		free(from_ether_frame );
 	}
 };
-void sendpackage(package *pak,char *interface,char *ip,char *IPv6, int icmptype,int code,char *data){
+void sendpackage(package *pak,char *dst_mac,char *interface,char *ip,char *IPv6, int icmptype,int code,char *data){
 	char dest_mac[6];
 	char sour_mac[6];
 	sockaddr_ll device;
@@ -327,12 +327,16 @@ void sendpackage(package *pak,char *interface,char *ip,char *IPv6, int icmptype,
 //	dest_mac=pak->allocate(6);
 //	sour_mac=pak->allocate(6);
 	memcpy(sour_mac,pak->getmac(&interface),6);
-	dest_mac[0]=0xff;	
-	dest_mac[1]=0xff;	
-	dest_mac[2]=0xff;
-	dest_mac[3]=0xff;
-	dest_mac[4]=0xff;	
-	dest_mac[5]=0xff;
+	if(dst_mac==NULL){
+		dest_mac[0]=0xff;	
+		dest_mac[1]=0xff;	
+		dest_mac[2]=0xff;
+		dest_mac[3]=0xff;
+		dest_mac[4]=0xff;	
+		dest_mac[5]=0xff;
+	}else{
+		memcpy(dest_mac,dst_mac,6);
+	}
 //	printf("%s\n",dest_mac);
 
 	Ip6Hdr ipv6_header=pak->creat_IPv6Header(dest_mac,sour_mac,ip, IPv6 ,strlen(data));
@@ -367,7 +371,7 @@ int main(void){
 
 	for(int i=0 ; i<3; i++){
 		// printf("i=%d\n",i);
-		sendpackage(pak,"wlan0",ip,"bbbb::2903:c560:e4a1:ece7",200,0,"ssdp:discover");
+		sendpackage(pak,NULL,"wlan0",ip,"bbbb::2903:c560:e4a1:ece7",200,0,"ssdp:discover");
 	}
 
 	while(true){
