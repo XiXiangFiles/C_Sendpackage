@@ -369,9 +369,9 @@ int main(void){
 	memcpy(my_mac,pak->getmac(&interface),6);
 	memcpy(my_ip,ip,16);
 
-	for(int i=0 ; i<1; i++){
+	for(int i=0 ; i<2; i++){
 		// printf("i=%d\n",i);
-		sendpackage(pak,NULL,"wlan0",ip,"ff02::1",201,2,"ssdp:update");
+		sendpackage(pak,NULL,"wlan0",ip,"ff02::1",201,1,"ssdp:byebye");
 		// while(true){
 		// 	memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
 
@@ -380,6 +380,7 @@ int main(void){
 		// 	}
 		// 	//break;
 		// }
+		exit(1);
 	}
 
 	return 0;

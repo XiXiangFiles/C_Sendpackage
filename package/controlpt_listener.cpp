@@ -348,7 +348,7 @@ int main(void){
 
 	while(true){
 		memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
-		if((recvsd[12]==0x86 && recvsd[13]==0xDD && recvsd[54]==201 && recvsd[55]==0)||(recvsd[12]==0x86 && recvsd[13]==0xDD && recvsd[54]==201 && recvsd[55]==1)||(recvsd[12]==0x86 && recvsd[13]==0xDD && recvsd[54]==201 && recvsd[55]==2)){
+		if(recvsd[12]==0x86 && recvsd[13]==0xDD && recvsd[54]==201 && recvsd[55]==0 || recvsd[55]== 1 || recvsd[55]==2 ){
 			pak->check_frame(recvsd,0,84);
 		}
 		
