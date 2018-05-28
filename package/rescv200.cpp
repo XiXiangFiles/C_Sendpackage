@@ -211,10 +211,12 @@ class package{
     		exit (EXIT_FAILURE);
   		}
 
-  		if ((status = inet_pton (AF_INET6, dest_ip, &(send_iphdr.ip6_dst))) != 1) {
-    		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
+  	//	if ((status = inet_pton (AF_INET6, dest_ip, &(send_iphdr.ip6_dst))) != 1) {
+    	//	fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
     	//	exit (EXIT_FAILURE);
-  		}
+  	//	}else{
+			memcpy(&send_iphdr.ip6_dst,dest_ip,16);
+	//	}
   	//	close (status);
   		return send_iphdr;
 		
@@ -353,27 +355,8 @@ int main(void){
 			char dst_mac[6];
 			char dst_ip[16];
 			memcpy(dst_mac,recvsd+6,6);
-			memcpy(dst_ip ,recvsd+22,16);
-
-			
-			printf("dst_mac[0]=%x\n",dst_ip[0]);
-			printf("dst_mac[1]=%x\n",dst_ip[1]);
-			printf("dst_mac[2]=%x\n",dst_ip[2]);
-			printf("dst_mac[3]=%x\n",dst_ip[3]);
-			printf("dst_mac[4]=%x\n",dst_ip[4]);
-			printf("dst_mac[5]=%x\n",dst_ip[5]);
-			printf("dst_mac[6]=%x\n",dst_ip[6]);
-			printf("dst_mac[7]=%x\n",dst_ip[7]);
-			printf("dst_mac[8]=%x\n",dst_ip[8]);
-			printf("dst_mac[9]=%x\n",dst_ip[9]);
-			printf("dst_mac[10]=%x\n",dst_ip[10]);
-			printf("dst_mac[11]=%x\n",dst_ip[11]);
-			printf("dst_mac[12]=%x\n",dst_ip[12]);
-			printf("dst_mac[13]=%x\n",dst_ip[13]);
-			printf("dst_mac[14]=%x\n",dst_ip[14]);
-			printf("dst_mac[15]=%x\n",dst_ip[15]);
-			
-//			sendpackage(pak,dst_mac,"wlan0",ip,"bbbb::38bd:1a4c:2e50:ed98",200,1,"ssdp:response");
+			memcpy(dst_ip ,recvsd+22,16);	
+			//sendpackage(pak,dst_mac,"wlan0",ip,"bbbb::38bd:1a4c:2e50:ed98",200,1,"ssdp:response");
 			sendpackage(pak,dst_mac,"wlan0",ip,dst_ip,200,1,"ssdp:response");
 			exit(1);
 		}
