@@ -215,12 +215,12 @@ class package{
 	
 		if ((status = inet_pton (AF_INET6, src_ip, &(send_iphdr.ip6_src))) != 1) {
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
-    		exit (EXIT_FAILURE);
+    //		exit (EXIT_FAILURE);
   		}
 
   		if ((status = inet_pton (AF_INET6, dest_ip, &(send_iphdr.ip6_dst))) != 1) {
     		fprintf (stderr, "inet_pton() failed.\nError message: %s", strerror (status));
-    		exit (EXIT_FAILURE);
+    		//exit (EXIT_FAILURE);
   		}
   		return send_iphdr;
 		
@@ -353,6 +353,10 @@ int main(void){
 	char ip[INET6_ADDRSTRLEN];	
 	char *interface="wlan0";
 	ArrayList *listip6=new ArrayList(); 
+	struct timeval start;
+	struct timeval end;
+	unsigned long diff;
+	
 	listip6=pak->ipv6_ip();
 	for(int i=0 ; i< listip6->length(); i++){
 		char str[INET6_ADDRSTRLEN];
@@ -367,18 +371,30 @@ int main(void){
 
 	uint8_t my_mac[6],my_ip[16];
 	memcpy(my_mac,pak->getmac(&interface),6);
-	memcpy(my_ip,ip,16);
+//	memcpy(my_ip,ip,16);
+	inet_pton (AF_INET6, ip, &my_ip);
 
-	for(int i=0 ; i<100; i++){
+	for(int i=0 ; i<1; i++){
 		// printf("i=%d\n",i);
+		gettimeofday(&start,NULL);
 		sendpackage(pak,NULL,"wlan0",ip,"ff02::1",200,0,"ssdp:discover");
 		while(true){
-			memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);
-
-			if(recvsd[12]==0x86 && recvsd[13]==0xDD && recvsd[54]==200 && recvsd[55]==1){	
+			char src_ip[16];
+			memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);	
+			memcpy(src_ip,recvsd+38,16);
+			if(recvsd[12]==0x86 && recvsd[13]==0xDD && recvsd[54]==200 && recvsd[55]==1 && strcmp((char *)my_mac,(char *)src_ip )){	
+				
+				for(int i=0;i<16;i++){
+					printf("src_ip=%x\n",src_ip[i]);
+					printf("my_ip=%x\n",my_ip[i]);
+				}
+				gettimeofday(&end,NULL);
 				decodeframe(pak,recvsd);
+				diff = 1000000 * (end.tv_sec-start.tv_sec)+ end.tv_usec-start.tv_usec;
+				printf("different time = %ld\n",diff);
+
+				exit(1);
 			}
-			//break;
 		}
 	}
 
