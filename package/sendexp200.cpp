@@ -355,6 +355,7 @@ int main(void){
 	ArrayList *listip6=new ArrayList(); 
 	struct timeval start;
 	struct timeval end;
+	struct timeval count;
 	unsigned long diff;
 	
 	listip6=pak->ipv6_ip();
@@ -377,24 +378,36 @@ int main(void){
 	for(int i=0 ; i<1; i++){
 		// printf("i=%d\n",i);
 		gettimeofday(&start,NULL);
+		gettimeofday(&count,NULL);
 		sendpackage(pak,NULL,"wlan0",ip,"ff02::1",200,0,"ssdp:discover");
 		while(true){
 			char src_ip[16];
+			gettimeofday(&count,NULL);
 			memcpy(recvsd,pak->receive_pak(), IP_MAXPACKET);	
 			memcpy(src_ip,recvsd+38,16);
 			if(recvsd[12]==0x86 && recvsd[13]==0xDD && recvsd[54]==200 && recvsd[55]==1 && strcmp((char *)my_mac,(char *)src_ip )){	
-				
+				/*
 				for(int i=0;i<16;i++){
 					printf("src_ip=%x\n",src_ip[i]);
 					printf("my_ip=%x\n",my_ip[i]);
 				}
+				*/
 				gettimeofday(&end,NULL);
 				decodeframe(pak,recvsd);
-				diff = 1000000 * (end.tv_sec-start.tv_sec)+ end.tv_usec-start.tv_usec;
-				printf("different time = %ld\n",diff);
+				diff = (end.tv_sec-start.tv_sec)*1000000+ (end.tv_usec-start.tv_usec);
+				printf("end.tv= %ld\n",end.tv_usec);
+				printf("strar.tv=%ld\n",start.tv_usec);
+				printf("different time = %d us\n",diff);
 
 				exit(1);
 			}
+
+				
+			if(((count.tv_sec-start.tv_sec)*1000000+ (count.tv_usec-start.tv_usec))>2000000){
+				perror("it's timeout");
+				exit(1);
+			}
+			
 		}
 	}
 
